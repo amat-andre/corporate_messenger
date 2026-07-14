@@ -13,19 +13,15 @@ type Server struct {
 	logger     *slog.Logger
 }
 
-func New(port int, logger *slog.Logger) *Server {
+func New(port int, handler http.Handler, logger *slog.Logger) *Server {
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		w.Write([]byte("Messenger API"))
-	})
+	// handler.Handle("GET /", http.FileServer(http.Dir(webDir))) // когда будет готов фронт, раскомментировать и указать путь к нему
 
 	return &Server{
 		logger: logger,
 		httpServer: &http.Server{
 			Addr:         fmt.Sprintf(":%d", port),
-			Handler:      mux,
+			Handler:      handler,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 5 * time.Second,
 			IdleTimeout:  time.Minute,
@@ -33,10 +29,10 @@ func New(port int, logger *slog.Logger) *Server {
 	}
 }
 
-func (serv *Server) Run() error {
-	serv.logger.Info("server started", "addr", serv.httpServer.Addr)
+func (server *Server) Run() error {
+	server.logger.Info("server started", "addr", server.httpServer.Addr)
 
-	err := serv.httpServer.ListenAndServe()
+	err := server.httpServer.ListenAndServe()
 
 	if err != nil && err != http.ErrServerClosed {
 		return err
@@ -45,7 +41,7 @@ func (serv *Server) Run() error {
 	return nil
 }
 
-func (serv *Server) Shutdown(ctx context.Context) error {
-	serv.logger.Info("server stopping")
-	return serv.httpServer.Shutdown(ctx)
+func (server *Server) Shutdown(ctx context.Context) error {
+	server.logger.Info("server stopping")
+	return server.httpServer.Shutdown(ctx)
 }

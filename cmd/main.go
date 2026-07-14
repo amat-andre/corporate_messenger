@@ -8,9 +8,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/amat-andre/corporate_messenger/internal/api"
+	"github.com/amat-andre/corporate_messenger/internal/auth"
 	"github.com/amat-andre/corporate_messenger/internal/config"
 	"github.com/amat-andre/corporate_messenger/internal/db"
+	"github.com/amat-andre/corporate_messenger/internal/handlers"
 	"github.com/amat-andre/corporate_messenger/internal/server"
+	"github.com/amat-andre/corporate_messenger/internal/service"
 )
 
 func main(){
@@ -18,24 +22,37 @@ func main(){
 
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Error("failed to load config:", "error", err.Error())
+		logger.Error("failed to load config:", "error", err)
 		os.Exit(1)
 	}
+	auth.Init(cfg.JWT.Secret)
 
-	base := db.New()
+	database := db.New(logger)
 
-	err = base.Connect(cfg.DB)
+	err = database.Connect(cfg.DB)
 	if err != nil {
-		logger.Error("failed to connect to database:", "error", err.Error())
+		logger.Error("failed to connect database:", "error", err)
 		os.Exit(1)
 	}
-	defer base.Close()
+	defer database.Close()
 
-	srv := server.New(cfg.Server.Port, logger)
+	err = database.Migrate()
+	if err != nil {
+		logger.Error("failed to migrate database:", "error", err)
+		os.Exit(1)
+	}
+
+	services := service.NewServices(database, logger)
+
+	handler := handlers.New(services, logger) // в будущем разбить на отдельные структуры, чтобы не передавать все сервисы в каждый хендлер
+
+	router := api.New(handler, logger)
+
+	server := server.New(cfg.Server.Port, router, logger)
 	
 	go func() {
-		if err := srv.Run(); err != nil {
-			logger.Error("failed to run server:", "error", err.Error())
+		if err := server.Run(); err != nil {
+			logger.Error("failed to run server:", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -51,8 +68,8 @@ func main(){
 	)
 	defer cancel()
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("failed to shutdown server:", "error", err.Error())
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Error("failed to shutdown server:", "error", err)
 	}
 
 	logger.Info("application stopped")
