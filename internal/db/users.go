@@ -14,7 +14,7 @@ func (db *Database) SearchUsers(search string) ([]*models.User, error) {
 		ORDER BY login
 		LIMIT 20
 	`
-	
+
 	ctx, cancel := db.newContext()
 	defer cancel()
 

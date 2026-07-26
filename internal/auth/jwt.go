@@ -6,35 +6,15 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
+
+var ErrInvalidToken = errors.New("invalid token")
 
 var jwtSecret []byte
 
 // Init устанавливает секретный ключ для JWT.
 func Init(secret string) {
 	jwtSecret = []byte(secret)
-}
-
-// HashPassword возвращает bcrypt-хэш пароля.
-func CreatePasswordHash(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword(
-		[]byte(password),
-		bcrypt.DefaultCost,
-	)
-	if err != nil {
-		return "", fmt.Errorf("failed to hash password: %w", err)
-	}
-
-	return string(hash), nil
-}
-
-// CheckPassword сравнивает пароль и его хэш.
-func CheckPassword(hash, password string) error {
-	return bcrypt.CompareHashAndPassword(
-		[]byte(hash),
-		[]byte(password),
-	)
 }
 
 type Claims struct {
@@ -85,7 +65,7 @@ func ParseToken(tokenString string) (int64, error) {
 	}
 
 	if !token.Valid {
-		return 0, errors.New("invalid token")
+		return 0, ErrInvalidToken
 	}
 
 	return claims.UserID, nil

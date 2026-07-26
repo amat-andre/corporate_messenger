@@ -8,17 +8,12 @@ import (
 
 type Handler struct {
 	services *service.Services
-	logger *slog.Logger
-}
-
-// Структура ответа с токеном для хендлеров.
-type TokenResponse struct {
-	Token string `json:"token"`
+	logger   *slog.Logger
 }
 
 func New(services *service.Services, logger *slog.Logger) *Handler {
 	return &Handler{
 		services: services,
-		logger: logger,
+		logger:   logger,
 	}
 }

@@ -1,15 +1,22 @@
+.git
+.github
+
 .env
-
-.idea
-
-.vscode
+.env.*
 
 *.exe
-
 *.db
 
-coverage.out
+!.env.example
 
-vendor/
+.idea
+.vscode
 
-bin/
+tmp
+bin
+
+*.log
+
+Dockerfile
+compose.yaml
+docker-compose.yml

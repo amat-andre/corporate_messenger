@@ -17,10 +17,10 @@ var (
 	// и может ошибки авторизации можно вынести в отдельный файл errors.go пакета auth, чтобы не загромождать миддлварь
 )
 
-func Auth(next http.Handler, logger *slog.Logger,) http.Handler {
+func Auth(next http.HandlerFunc, logger *slog.Logger) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		
+
 		header := strings.TrimSpace(req.Header.Get("Authorization"))
 
 		if header == "" {

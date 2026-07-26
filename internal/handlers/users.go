@@ -13,7 +13,7 @@ func (h *Handler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 		r.URL.Query().Get("search"),
 	)
 
-	users, err := h.services.Auth.SearchUsers(search)
+	users, err := h.services.User.SearchUsers(search)
 	if err != nil {
 		help.WriteError(h.logger, w, http.StatusInternalServerError, err)
 		return
