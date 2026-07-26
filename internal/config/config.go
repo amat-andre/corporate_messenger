@@ -32,9 +32,9 @@ var defConfig = map[string]string{
 	"SERVER_PORT": "8080",
 	"DB_PORT":     "5432",
 	"DB_HOST":     "localhost",
+	"DB_NAME":     "messenger",
 	"DB_USER":     "postgres",
 	"DB_PASSWORD": "strong_password",
-	"DB_NAME":     "messenger",
 	"JWT_SECRET":  "super_puper_very_secret",
 }
 

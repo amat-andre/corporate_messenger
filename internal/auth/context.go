@@ -1,10 +1,15 @@
 package auth
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type contextKey string
 
 const userIDKey contextKey = "userID"
+
+var ErrUserUnauthorized = errors.New("user not authenticated")
 
 // ContextWithUserID сохраняет ID пользователя в Context.
 func ContextWithUserID(ctx context.Context, userID int64) context.Context {

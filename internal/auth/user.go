@@ -1,14 +1,13 @@
 package auth
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 
 	"github.com/amat-andre/corporate_messenger/internal/models"
 )
 
 var ErrInvalidPassword = errors.New("invalid password")
-
 
 // CheckCredentials сравнивает пароль вводимый пользователем с хэшем в базе.
 func CheckCredentials(user *models.User, password string) error {

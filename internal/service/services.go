@@ -7,15 +7,17 @@ import (
 )
 
 type Services struct {
-	Auth *AuthService
-	Chat *ChatService
-	User *UserService
+	Auth         *AuthService
+	User         *UserService
+	Conversation *ConversationService
+	Message      *MessageService
 }
 
 func NewServices(db *db.Database, logger *slog.Logger) *Services {
 	return &Services{
-		Auth: NewAuthService(db, logger),
-		User: NewUserService(db, logger),
-		Chat: NewChatService(db, logger),
+		Auth:         NewAuthService(db, logger),
+		User:         NewUserService(db, logger),
+		Conversation: NewConversationService(db, logger),
+		Message:      NewMessageService(db, logger),
 	}
 }

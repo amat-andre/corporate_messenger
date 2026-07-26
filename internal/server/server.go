@@ -14,9 +14,6 @@ type Server struct {
 }
 
 func New(port int, handler http.Handler, logger *slog.Logger) *Server {
-
-	// handler.Handle("GET /", http.FileServer(http.Dir(webDir))) // когда будет готов фронт, раскомментировать и указать путь к нему
-
 	return &Server{
 		logger: logger,
 		httpServer: &http.Server{

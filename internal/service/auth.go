@@ -10,13 +10,6 @@ import (
 	"github.com/amat-andre/corporate_messenger/internal/models"
 )
 
-//вынести в errors отделньый, когда накопится
-var (
-	ErrUserAlreadyExists   = errors.New("user already exists")
-	ErrInvalidCredentials  = errors.New("invalid login or password")
-	ErrCreateUser = errors.New("failed to create user")
-)
-
 type AuthService struct {
 	db     *db.Database
 	logger *slog.Logger

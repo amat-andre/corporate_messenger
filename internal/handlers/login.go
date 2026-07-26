@@ -4,18 +4,14 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/amat-andre/corporate_messenger/internal/dto"
 	help "github.com/amat-andre/corporate_messenger/internal/helpers"
 	"github.com/amat-andre/corporate_messenger/internal/service"
 	"github.com/amat-andre/corporate_messenger/internal/validation"
 )
 
-type LoginRequest struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-}
-
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	var req LoginRequest
+	var req dto.LoginRequest
 
 	if err := help.ReadJSON(r, &req); err != nil {
 		help.WriteError(h.logger, w, http.StatusBadRequest, err)
@@ -40,7 +36,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	help.WriteJSON(h.logger, w, http.StatusOK, TokenResponse{
+	help.WriteJSON(h.logger, w, http.StatusOK, dto.TokenResponse{
 		Token: token,
 	})
 }

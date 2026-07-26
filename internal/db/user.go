@@ -67,7 +67,7 @@ func (db *Database) GetUserByLogin(login string) (*models.User, error) {
 	return user, nil
 }
 
-//GetUserByID ищет пользователя по ID.
+// GetUserByID ищет пользователя по ID.
 func (db *Database) GetUserByID(id int64) (*models.User, error) {
 	const query = `
 		SELECT id, login, password_hash, created_at

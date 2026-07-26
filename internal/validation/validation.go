@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	ErrEmptyLogin      = errors.New("login is required")
-	ErrEmptyPassword   = errors.New("password is required")
-	ErrShortPassword   = errors.New("password must contain at least 8 characters")
-	ErrLongLogin       = errors.New("login must not exceed 64 characters")
-	ErrLongPassword    = errors.New("password must not exceed 128 characters")
+	ErrEmptyLogin    = errors.New("login is required")
+	ErrEmptyPassword = errors.New("password is required")
+	ErrShortPassword = errors.New("password must contain at least 8 characters")
+	ErrLongLogin     = errors.New("login must not exceed 64 characters")
+	ErrLongPassword  = errors.New("password must not exceed 128 characters")
 )
 
 func Credentials(login, password string) error {

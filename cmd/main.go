@@ -15,9 +15,14 @@ import (
 	"github.com/amat-andre/corporate_messenger/internal/handlers"
 	"github.com/amat-andre/corporate_messenger/internal/server"
 	"github.com/amat-andre/corporate_messenger/internal/service"
+	"github.com/joho/godotenv"
 )
 
 func main(){
+	if err := godotenv.Load(); err != nil {
+		slog.Debug(".env file not found, environment variables are used")
+	}
+
 	logger := slog.Default()
 
 	cfg, err := config.Load()

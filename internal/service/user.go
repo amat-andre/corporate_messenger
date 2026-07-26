@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/amat-andre/corporate_messenger/internal/db"
+	"github.com/amat-andre/corporate_messenger/internal/dto"
 )
 
 type UserService struct {
@@ -18,45 +19,31 @@ func NewUserService(db *db.Database, logger *slog.Logger) *UserService {
 	}
 }
 
-type CurrentUser struct {
-	ID    int64
-	Login string
-}
-
-func (s *AuthService) CurrentUser(userID int64) (*CurrentUser, error) {
+func (s *UserService) CurrentUser(userID int64) (*dto.CurrentUser, error) {
 	// пока без особой логики, просто возвращаем пользователя по ID
 	user, err := s.db.GetUserByID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &CurrentUser{
+	return &dto.CurrentUser{
 		ID:    user.ID,
 		Login: user.Login,
 	}, nil
 }
 
-type UserShortResponse struct {
-	ID    int64  `json:"id"`
-	Login string `json:"login"`
-}
-
-type UsersResponse struct {
-	Users []UserShortResponse `json:"users"`
-}
-
-func (s *AuthService) SearchUsers(search string) (*UsersResponse, error) {
+func (s *UserService) SearchUsers(search string) (*dto.UsersResponse, error) {
 	users, err := s.db.SearchUsers(search)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := &UsersResponse{
-		Users: make([]UserShortResponse, 0, len(users)),
+	resp := &dto.UsersResponse{
+		Users: make([]dto.UserShortResponse, 0, len(users)),
 	}
 
 	for _, user := range users {
-		resp.Users = append(resp.Users, UserShortResponse{
+		resp.Users = append(resp.Users, dto.UserShortResponse{
 			ID:    user.ID,
 			Login: user.Login,
 		})

@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 	"log/slog"
+	"time"
 
 	"github.com/amat-andre/corporate_messenger/internal/config"
 
@@ -13,7 +13,7 @@ import (
 )
 
 type Database struct {
-	DB *sql.DB
+	DB     *sql.DB
 	logger *slog.Logger
 }
 
@@ -72,8 +72,4 @@ func (base *Database) Close() {
 	} else {
 		base.logger.Info("database closed")
 	}
-}
-
-func (base *Database) CreateConversation(userIDs []int64) (int64, error) {
-	return 0, nil
 }
