@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/amat-andre/corporate_messenger/internal/models"
 )
@@ -10,10 +11,12 @@ func (db *Database) SearchUsers(search string) ([]*models.User, error) {
 	const query = `
 		SELECT id, login, created_at
 		FROM users
-		WHERE login ILIKE '%' || $1 || '%'
+		WHERE login ILIKE '%' || $1 || '%' ESCAPE '\'
 		ORDER BY login
 		LIMIT 20
 	`
+
+	search = escapeLike(search)
 
 	ctx, cancel := db.newContext()
 	defer cancel()
@@ -46,4 +49,15 @@ func (db *Database) SearchUsers(search string) ([]*models.User, error) {
 	}
 
 	return users, nil
+}
+
+// escapeLike экранирует спецсимволы LIKE, чтобы поисковая строка
+// воспринималась как литерал.
+func escapeLike(s string) string {
+	replacer := strings.NewReplacer(
+		`\`, `\\`,
+		`%`, `\%`,
+		`_`, `\_`,
+	)
+	return replacer.Replace(s)
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"log/slog"
 
 	"github.com/amat-andre/corporate_messenger/internal/db"
@@ -23,6 +24,9 @@ func (s *UserService) CurrentUser(userID int64) (*dto.CurrentUser, error) {
 	// пока без особой логики, просто возвращаем пользователя по ID
 	user, err := s.db.GetUserByID(userID)
 	if err != nil {
+		if errors.Is(err, db.ErrUserNotFound) {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 

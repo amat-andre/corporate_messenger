@@ -20,9 +20,12 @@ FROM alpine:latest
 WORKDIR /app
 
 # Сертификаты необходимы для HTTPS-соединений.
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates \
+    && addgroup -S app && adduser -S app -G app
 
-COPY --from=builder /app/gophertalk ./gophertalk
+COPY --from=builder --chown=app:app /app/gophertalk ./gophertalk
+
+USER app
 
 EXPOSE 8080
 

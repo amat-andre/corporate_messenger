@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -35,7 +36,6 @@ var defConfig = map[string]string{
 	"DB_NAME":     "messenger",
 	"DB_USER":     "postgres",
 	"DB_PASSWORD": "strong_password",
-	"JWT_SECRET":  "super_puper_very_secret",
 }
 
 func Load() (*Config, error) {
@@ -61,8 +61,14 @@ func Load() (*Config, error) {
 			Name:     getEnv("DB_NAME"),
 		},
 		JWT: JWTConfig{
-			Secret: getEnv("JWT_SECRET"),
+			Secret: os.Getenv("JWT_SECRET"),
 		},
+	}
+
+	// Секрет по умолчанию не задается: подписание токенов
+	// публично известным ключом сводит JWT-аутентификацию на нет.
+	if cfg.JWT.Secret == "" {
+		return nil, errors.New("JWT_SECRET is required")
 	}
 
 	return cfg, nil

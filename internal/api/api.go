@@ -31,8 +31,9 @@ func New(handler *hdl.Handler, logger *slog.Logger) *http.ServeMux {
 	// Получение пользователем списка сообщений из указанного диалога
 	mux.Handle("GET /api/conversations/{conversationID}/messages", middleware.Auth(handler.GetConversationMessages, logger))
 
-	// Просто проверка работы сервера - убрать когда фронт будет
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	// Просто проверка работы сервера - убрать когда фронт будет.
+	// "{$}" — точное совпадение, чтобы не перехватывать чужие пути.
+	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Messenger API"))
 	})
 
