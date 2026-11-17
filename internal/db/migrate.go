@@ -12,28 +12,16 @@ CREATE TABLE IF NOT EXISTS users (
 	created_at TIMESTAMP NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS messages (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    username TEXT NOT NULL,
-    text TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_messages_created_at
-ON messages(created_at);
-
-CREATE INDEX IF NOT EXISTS idx_messages_user_id
-ON messages(user_id);
-
 CREATE TABLE IF NOT EXISTS conversations (
     id BIGSERIAL PRIMARY KEY,
+    type TEXT NOT NULL DEFAULT 'direct',
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS conversation_members (
     conversation_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
+    joined_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY(conversation_id, user_id),
 
@@ -45,6 +33,23 @@ CREATE TABLE IF NOT EXISTS conversation_members (
         REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS messages (
+    id BIGSERIAL PRIMARY KEY,
+    conversation_id BIGINT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    text TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id
+ON messages(conversation_id);
+
+CREATE INDEX IF NOT EXISTS idx_messages_created_at
+ON messages(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_messages_user_id
+ON messages(user_id);
 `
 
 func (base *Database) Migrate() error {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -18,7 +19,16 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main(){
+func main() {
+	if err := run(); err != nil {
+		slog.Error("application failed", "error", err)
+		os.Exit(1)
+	}
+
+	slog.Info("application stopped")
+}
+
+func run() error {
 	if err := godotenv.Load(); err != nil {
 		slog.Debug(".env file not found, environment variables are used")
 	}
@@ -27,8 +37,7 @@ func main(){
 
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Error("failed to load config:", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 	auth.Init(cfg.JWT.Secret)
 
@@ -36,15 +45,13 @@ func main(){
 
 	err = database.Connect(cfg.DB)
 	if err != nil {
-		logger.Error("failed to connect database:", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to connect database: %w", err)
 	}
 	defer database.Close()
 
 	err = database.Migrate()
 	if err != nil {
-		logger.Error("failed to migrate database:", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	services := service.NewServices(database, logger)
@@ -54,18 +61,28 @@ func main(){
 	router := api.New(handler, logger)
 
 	server := server.New(cfg.Server.Port, router, logger)
-	
+
+	serverErr := make(chan error, 1)
+
 	go func() {
-		if err := server.Run(); err != nil {
-			logger.Error("failed to run server:", "error", err)
-			os.Exit(1)
-		}
+		serverErr <- server.Run()
 	}()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
-	
-	<-ctx.Done()
+
+	select {
+	// Ошибка запуска или неожиданное завершение сервера:
+	// выходим с ошибкой, defer-ы (в т.ч. database.Close) отрабатывают.
+	case err := <-serverErr:
+		if err != nil {
+			return fmt.Errorf("server error: %w", err)
+		}
+		return nil
+
+	// Получен сигнал остановки — плавно завершаем работу.
+	case <-ctx.Done():
+	}
 
 	shutdownCtx, cancel := context.WithTimeout(
 		context.Background(),
@@ -74,8 +91,8 @@ func main(){
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Error("failed to shutdown server:", "error", err)
+		return fmt.Errorf("failed to shutdown server: %w", err)
 	}
 
-	logger.Info("application stopped")
+	return nil
 }

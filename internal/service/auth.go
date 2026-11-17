@@ -23,26 +23,18 @@ func NewAuthService(db *db.Database, logger *slog.Logger) *AuthService {
 }
 
 func (s *AuthService) Register(login, password string) (string, error) {
-	// Проверяем, существует ли пользователь.
-	user, err := s.db.GetUserByLogin(login)
-	if err != nil {
-		if !errors.Is(err, db.ErrUserNotFound) {
-			return "", err
-		}
-	}
-
-	if user != nil {
-		return "", ErrUserAlreadyExists
-	}
-
 	// Создаем нового пользователя и хэшируем пароль.
-	user, err = registerUser(login, password)
+	user, err := registerUser(login, password)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrCreateUser, err)
 	}
 
-	// Сохраняем в БД.
+	// Сохраняем в БД. Уникальный индекс по login защищает
+	// от гонки при параллельной регистрации.
 	if err := s.db.CreateUser(user); err != nil {
+		if db.IsUniqueViolation(err) {
+			return "", ErrUserAlreadyExists
+		}
 		return "", fmt.Errorf("%w: %w", ErrCreateUser, err)
 	}
 

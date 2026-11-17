@@ -14,7 +14,7 @@ func (h *Handler) CreateConversation(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.CreateDirectConversationRequest
 
-	err := help.ReadJSON(r, &req)
+	err := help.ReadJSON(w, r, &req)
 	if err != nil {
 		help.WriteError(h.logger, w, http.StatusBadRequest, err)
 		return
@@ -39,5 +39,11 @@ func (h *Handler) CreateConversation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	help.WriteJSON(h.logger, w, http.StatusCreated, conversation)
+	response := dto.ConversationResponse{
+		ID:        conversation.ID,
+		Type:      conversation.Type,
+		CreatedAt: conversation.CreatedAt,
+	}
+
+	help.WriteJSON(h.logger, w, http.StatusCreated, response)
 }

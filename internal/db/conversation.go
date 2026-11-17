@@ -10,112 +10,6 @@ import (
 
 var ErrConversationNotFound = errors.New("conversation not found")
 
-// CreateConversation создает диалог
-func (db *Database) CreateConversation(conversation *models.Conversation) error {
-	const query = `
-		INSERT INTO conversations (type)
-		VALUES ($1)
-		RETURNING id, created_at
-	`
-
-	ctx, cancel := db.newContext()
-	defer cancel()
-
-	err := db.DB.QueryRowContext(
-		ctx,
-		query,
-		conversation.Type,
-	).Scan(&conversation.ID, &conversation.CreatedAt)
-
-	if err != nil {
-		return fmt.Errorf("failed to create conversation: %w", err)
-	}
-
-	return nil
-}
-
-// AddConversationMember добавляет участника в диалог
-func (db *Database) AddConversationMember(member *models.ConversationMember) error {
-	const query = `
-		INSERT INTO conversation_members (conversation_id, user_id)
-		VALUES ($1, $2)
-		RETURNING joined_at
-	`
-
-	ctx, cancel := db.newContext()
-	defer cancel()
-
-	err := db.DB.QueryRowContext(
-		ctx,
-		query,
-		member.ConversationID,
-		member.UserID,
-	).Scan(&member.JoinedAt)
-
-	if err != nil {
-		return fmt.Errorf("failed to add conversation member: %w", err)
-	}
-
-	return nil
-}
-
-// ConversationExists проверяет существование диалога
-func (db *Database) ConversationExists(conversationID int64) (bool, error) {
-	const query = `
-		SELECT EXISTS (
-			SELECT 1
-			FROM conversations
-			WHERE id = $1
-		)
-	`
-
-	ctx, cancel := db.newContext()
-	defer cancel()
-
-	var exists bool
-
-	err := db.DB.QueryRowContext(
-		ctx,
-		query,
-		conversationID,
-	).Scan(&exists)
-
-	if err != nil {
-		return false, fmt.Errorf("failed to check conversation: %w", err)
-	}
-
-	return exists, nil
-}
-
-// IsConversationMember проверяет состоит ли пользователь в диалоге
-func (db *Database) IsConversationMember(conversationID, userID int64) (bool, error) {
-	const query = `
-		SELECT EXISTS (
-			SELECT 1
-			FROM conversation_members
-			WHERE conversation_id = $1 AND user_id = $2
-		)
-	`
-
-	ctx, cancel := db.newContext()
-	defer cancel()
-
-	var exists bool
-
-	err := db.DB.QueryRowContext(
-		ctx,
-		query,
-		conversationID,
-		userID,
-	).Scan(&exists)
-
-	if err != nil {
-		return false, fmt.Errorf("failed to check conversation member: %w", err)
-	}
-
-	return exists, nil
-}
-
 // GetConversationByID получает диалог по ID
 func (db *Database) GetConversationByID(conversationID, userID int64) (*models.Conversation, error) {
 	const query = `SELECT
@@ -159,7 +53,7 @@ func (db *Database) GetConversationByID(conversationID, userID int64) (*models.C
 
 	if err != nil {
 
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrConversationNotFound
 		}
 
@@ -169,7 +63,9 @@ func (db *Database) GetConversationByID(conversationID, userID int64) (*models.C
 	return conversation, nil
 }
 
-// CreateDirectConversation создает личный диалог между двумя пользователями
+// CreateDirectConversation создает личный диалог между двумя пользователями.
+// Для пары пользователей берется advisory lock, поэтому параллельные
+// вызовы не создают дублирующихся диалогов.
 func (db *Database) CreateDirectConversation(firstUserID, secondUserID int64) (*models.Conversation, error) {
 
 	ctx, cancel := db.newContext()
@@ -178,6 +74,16 @@ func (db *Database) CreateDirectConversation(firstUserID, secondUserID int64) (*
 	var conversation *models.Conversation
 
 	err := db.WithTransaction(ctx, func(tx *sql.Tx) error {
+
+		// Блокируем пару пользователей на время транзакции,
+		// чтобы find-or-create выполнялся строго последовательно.
+		lockKey := fmt.Sprintf("%d:%d", min(firstUserID, secondUserID), max(firstUserID, secondUserID))
+
+		const lockQuery = `SELECT pg_advisory_xact_lock(hashtext($1))`
+
+		if _, err := tx.ExecContext(ctx, lockQuery, lockKey); err != nil {
+			return fmt.Errorf("failed to acquire conversation lock: %w", err)
+		}
 
 		conversation = &models.Conversation{}
 

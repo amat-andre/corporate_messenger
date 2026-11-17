@@ -3,6 +3,7 @@ package validation
 import (
 	"errors"
 	"strings"
+	"unicode/utf8"
 )
 
 var (
@@ -24,13 +25,13 @@ func Credentials(login, password string) error {
 	case password == "":
 		return ErrEmptyPassword
 
-	case len(login) > 64:
+	case utf8.RuneCountInString(login) > 64:
 		return ErrLongLogin
 
-	case len(password) > 128:
+	case utf8.RuneCountInString(password) > 128:
 		return ErrLongPassword
 
-	case len(password) < 8:
+	case utf8.RuneCountInString(password) < 8:
 		return ErrShortPassword
 	}
 

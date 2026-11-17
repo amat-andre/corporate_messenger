@@ -13,7 +13,7 @@ import (
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 
-	if err := help.ReadJSON(r, &req); err != nil {
+	if err := help.ReadJSON(w, r, &req); err != nil {
 		help.WriteError(h.logger, w, http.StatusBadRequest, err)
 		return
 	}

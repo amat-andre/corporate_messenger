@@ -24,10 +24,13 @@ type Claims struct {
 
 // CreateToken создает JWT.
 func CreateToken(userID int64) (string, error) {
+	now := time.Now()
+
 	claims := Claims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(24 * time.Hour)),
 		},
 	}
 

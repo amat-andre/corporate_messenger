@@ -26,7 +26,7 @@ func (h *Handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.CreateMessageRequest
 
-	if err := help.ReadJSON(r, &req); err != nil {
+	if err := help.ReadJSON(w, r, &req); err != nil {
 		help.WriteError(h.logger, w, http.StatusBadRequest, err)
 		return
 	}

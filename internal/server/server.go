@@ -17,11 +17,12 @@ func New(port int, handler http.Handler, logger *slog.Logger) *Server {
 	return &Server{
 		logger: logger,
 		httpServer: &http.Server{
-			Addr:         fmt.Sprintf(":%d", port),
-			Handler:      handler,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 5 * time.Second,
-			IdleTimeout:  time.Minute,
+			Addr:              fmt.Sprintf(":%d", port),
+			Handler:           handler,
+			ReadTimeout:       5 * time.Second,
+			ReadHeaderTimeout: 5 * time.Second,
+			WriteTimeout:      5 * time.Second,
+			IdleTimeout:       time.Minute,
 		},
 	}
 }
